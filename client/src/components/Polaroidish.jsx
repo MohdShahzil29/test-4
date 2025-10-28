@@ -592,203 +592,203 @@ export default function Polaroidish() {
     });
   }
 
-  // async function buildFullSheetPayload() {
-  //   const usingLayout = layouts.vertical[totalFrames];
-  //   if (!usingLayout) {
-  //     throw new Error("Invalid layout for current frames");
-  //   }
-  //   if (!photosTaken || photosTaken.length === 0) {
-  //     showMessage("No photos captured to print");
-  //     return null;
-  //   }
+  async function buildFullSheetPayload() {
+    const usingLayout = layouts.vertical[totalFrames];
+    if (!usingLayout) {
+      throw new Error("Invalid layout for current frames");
+    }
+    if (!photosTaken || photosTaken.length === 0) {
+      showMessage("No photos captured to print");
+      return null;
+    }
 
-  //   const finalW = usingLayout.finalWidth;
-  //   const finalH = usingLayout.finalHeight;
-  //   const slotW = Math.round(usingLayout.photoWidth);
-  //   const slotH = Math.round(usingLayout.photoHeight);
-  //   const numCols = usingLayout.numCols;
-  //   const numRows = usingLayout.numRows;
+    const finalW = usingLayout.finalWidth;
+    const finalH = usingLayout.finalHeight;
+    const slotW = Math.round(usingLayout.photoWidth);
+    const slotH = Math.round(usingLayout.photoHeight);
+    const numCols = usingLayout.numCols;
+    const numRows = usingLayout.numRows;
 
-  //   const gapX = Math.round(
-  //     (usingLayout.finalWidth - numCols * slotW) / (numCols + 1)
-  //   );
-  //   const gapY = Math.round(
-  //     (usingLayout.finalHeight - numRows * slotH) / (numRows + 1)
-  //   );
-  //   const gx = Math.max(0, gapX);
-  //   const gy = Math.max(0, gapY);
+    const gapX = Math.round(
+      (usingLayout.finalWidth - numCols * slotW) / (numCols + 1)
+    );
+    const gapY = Math.round(
+      (usingLayout.finalHeight - numRows * slotH) / (numRows + 1)
+    );
+    const gx = Math.max(0, gapX);
+    const gy = Math.max(0, gapY);
 
-  //   const sheetCanvas = document.createElement("canvas");
-  //   sheetCanvas.width = finalW;
-  //   sheetCanvas.height = finalH;
-  //   const ctx = sheetCanvas.getContext("2d");
+    const sheetCanvas = document.createElement("canvas");
+    sheetCanvas.width = finalW;
+    sheetCanvas.height = finalH;
+    const ctx = sheetCanvas.getContext("2d");
 
-  //   ctx.fillStyle = bgColor || COLORS.BASE_WHITE;
-  //   ctx.fillRect(0, 0, finalW, finalH);
+    ctx.fillStyle = bgColor || COLORS.BASE_WHITE;
+    ctx.fillRect(0, 0, finalW, finalH);
 
-  //   const regenerated = await Promise.all(
-  //     photosTaken.map((p) =>
-  //       makeFilteredDataUrl(p.raw, filter, slotW, slotH).catch(() => p.raw)
-  //     )
-  //   );
+    const regenerated = await Promise.all(
+      photosTaken.map((p) =>
+        makeFilteredDataUrl(p.raw, filter, slotW, slotH).catch(() => p.raw)
+      )
+    );
 
-  //   const slots = [];
-  //   for (let i = 0; i < totalFrames; i++) {
-  //     const row = Math.floor(i / numCols);
-  //     const idx = row % regenerated.length;
-  //     const src = regenerated[idx];
+    const slots = [];
+    for (let i = 0; i < totalFrames; i++) {
+      const row = Math.floor(i / numCols);
+      const idx = row % regenerated.length;
+      const src = regenerated[idx];
 
-  //     const column = i % numCols;
-  //     const y = gy + row * (slotH + gy);
-  //     const x = gx + column * (slotW + gx);
+      const column = i % numCols;
+      const y = gy + row * (slotH + gy);
+      const x = gx + column * (slotW + gx);
 
-  //     if (src) {
-  //       await new Promise((res) => {
-  //         const img = new Image();
-  //         img.crossOrigin = "anonymous";
-  //         img.onload = () => {
-  //           const drawW = Math.min(slotW, finalW - x);
-  //           const drawH = Math.min(slotH, finalH - y);
-  //           ctx.drawImage(img, 0, 0, img.width, img.height, x, y, drawW, drawH);
-  //           res(true);
-  //         };
-  //         img.onerror = () => res(true);
-  //         img.src = src;
-  //       });
-  //     }
+      if (src) {
+        await new Promise((res) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => {
+            const drawW = Math.min(slotW, finalW - x);
+            const drawH = Math.min(slotH, finalH - y);
+            ctx.drawImage(img, 0, 0, img.width, img.height, x, y, drawW, drawH);
+            res(true);
+          };
+          img.onerror = () => res(true);
+          img.src = src;
+        });
+      }
 
-  //     slots.push({
-  //       index: i,
-  //       column,
-  //       row,
-  //       x,
-  //       y,
-  //       width: slotW,
-  //       height: slotH,
-  //       photoIndex: idx,
-  //       image: src,
-  //     });
-  //   }
+      slots.push({
+        index: i,
+        column,
+        row,
+        x,
+        y,
+        width: slotW,
+        height: slotH,
+        photoIndex: idx,
+        image: src,
+      });
+    }
 
-  //   const columns = Array.from({ length: numCols }).map((_, colIndex) =>
-  //     slots
-  //       .filter((s) => s.column === colIndex)
-  //       .sort((a, b) => a.row - b.row)
-  //       .map((s) => ({
-  //         index: s.index,
-  //         row: s.row,
-  //         image: s.image,
-  //         width: s.width,
-  //         height: s.height,
-  //       }))
-  //   );
+    const columns = Array.from({ length: numCols }).map((_, colIndex) =>
+      slots
+        .filter((s) => s.column === colIndex)
+        .sort((a, b) => a.row - b.row)
+        .map((s) => ({
+          index: s.index,
+          row: s.row,
+          image: s.image,
+          width: s.width,
+          height: s.height,
+        }))
+    );
 
-  //   const sheetDataUrl = sheetCanvas.toDataURL("image/png");
+    const sheetDataUrl = sheetCanvas.toDataURL("image/png");
 
-  //   const payload = {
-  //     type: "polaroidish-full-sheet",
-  //     createdAt: new Date().toISOString(),
-  //     templateId: selectedTemplate?.id || null,
-  //     filter,
-  //     backgroundColor: bgColor,
-  //     sheet: {
-  //       width: finalW,
-  //       height: finalH,
-  //       units: "px",
-  //       dpi: 300,
-  //       fileType: "png",
-  //       image: sheetDataUrl,
-  //     },
-  //     page: {
-  //       pageIndex: 0,
-  //       slots: slots.map((s) => ({
-  //         index: s.index,
-  //         column: s.column,
-  //         row: s.row,
-  //         x: s.x,
-  //         y: s.y,
-  //         width: s.width,
-  //         height: s.height,
-  //         photoIndex: s.photoIndex,
-  //         image: s.image,
-  //       })),
-  //     },
-  //     columns,
-  //     printCopies,
-  //     originalPhotosCount: photosTaken.length,
-  //   };
+    const payload = {
+      type: "polaroidish-full-sheet",
+      createdAt: new Date().toISOString(),
+      templateId: selectedTemplate?.id || null,
+      filter,
+      backgroundColor: bgColor,
+      sheet: {
+        width: finalW,
+        height: finalH,
+        units: "px",
+        dpi: 300,
+        fileType: "png",
+        image: sheetDataUrl,
+      },
+      page: {
+        pageIndex: 0,
+        slots: slots.map((s) => ({
+          index: s.index,
+          column: s.column,
+          row: s.row,
+          x: s.x,
+          y: s.y,
+          width: s.width,
+          height: s.height,
+          photoIndex: s.photoIndex,
+          image: s.image,
+        })),
+      },
+      columns,
+      printCopies,
+      originalPhotosCount: photosTaken.length,
+    };
 
-  //   return payload;
-  // }
+    return payload;
+  }
 
-  // async function handleProceedToPrintWholeSheet() {
-  //   try {
-  //     showMessage("Preparing sheet for print...");
-  //     const payload = await buildFullSheetPayload();
-  //     if (!payload) return;
-  //     setStep("print");
+  async function handleProceedToPrintWholeSheet() {
+    try {
+      showMessage("Preparing sheet for print...");
+      const payload = await buildFullSheetPayload();
+      if (!payload) return;
+      setStep("print");
 
-  //     const formData = new FormData();
-  //     formData.append("copies", String(printCopies));
-  //     formData.append("filter", filter ?? "");
-  //     formData.append("templateId", selectedTemplate?.id || "");
-  //     formData.append("backgroundColor", bgColor ?? "");
+      const formData = new FormData();
+      formData.append("copies", String(printCopies));
+      formData.append("filter", filter ?? "");
+      formData.append("templateId", selectedTemplate?.id || "");
+      formData.append("backgroundColor", bgColor ?? "");
 
-  //     const sheetImage = payload.sheet.image;
-  //     let blob;
-  //     try {
-  //       if (!sheetImage) throw new Error("No sheet image found in payload");
-  //       if (sheetImage instanceof Blob) {
-  //         blob = sheetImage;
-  //       } else {
-  //         const resp = await fetch(sheetImage);
-  //         blob = await resp.blob();
-  //       }
-  //     } catch (fetchErr) {
-  //       console.warn("fetch->blob failed, trying base64 fallback:", fetchErr);
-  //       if (typeof sheetImage === "string" && sheetImage.startsWith("data:")) {
-  //         const parts = sheetImage.split(",");
-  //         const mimeMatch = parts[0].match(/:(.*?);/);
-  //         const mime = mimeMatch ? mimeMatch[1] : "image/png";
-  //         const bstr = atob(parts[1]);
-  //         let n = bstr.length;
-  //         const u8arr = new Uint8Array(n);
-  //         while (n--) u8arr[n] = bstr.charCodeAt(n);
-  //         blob = new Blob([u8arr], { type: mime });
-  //       } else {
-  //         throw fetchErr;
-  //       }
-  //     }
+      const sheetImage = payload.sheet.image;
+      let blob;
+      try {
+        if (!sheetImage) throw new Error("No sheet image found in payload");
+        if (sheetImage instanceof Blob) {
+          blob = sheetImage;
+        } else {
+          const resp = await fetch(sheetImage);
+          blob = await resp.blob();
+        }
+      } catch (fetchErr) {
+        console.warn("fetch->blob failed, trying base64 fallback:", fetchErr);
+        if (typeof sheetImage === "string" && sheetImage.startsWith("data:")) {
+          const parts = sheetImage.split(",");
+          const mimeMatch = parts[0].match(/:(.*?);/);
+          const mime = mimeMatch ? mimeMatch[1] : "image/png";
+          const bstr = atob(parts[1]);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while (n--) u8arr[n] = bstr.charCodeAt(n);
+          blob = new Blob([u8arr], { type: mime });
+        } else {
+          throw fetchErr;
+        }
+      }
 
-  //     formData.append("sheetImage", blob, "sheet.png");
+      formData.append("sheetImage", blob, "sheet.png");
 
-  //     const url = "http://localhost:3000/api/print";
-  //     try {
-  //       const res = await axios.post(url, formData, {
-  //         withCredentials: true,
-  //       });
+      const url = "https://f5550d7d7733.ngrok-free.app/receive";
+      try {
+        const res = await axios.post(url, formData, {
+          withCredentials: true,
+        });
 
-  //       console.log("Print response:", res.data);
-  //       showMessage("Sent to printer");
-  //     } catch (err) {
-  //       console.error(
-  //         "Print API error:",
-  //         err.response?.data || err.message || err
-  //       );
-  //       const serverErr =
-  //         err.response?.data?.error || err.response?.status || err.message;
-  //       showMessage(
-  //         `Prepared sheet but print server returned an error: ${serverErr}`
-  //       );
-  //     }
+        console.log("Print response:", res.data);
+        showMessage("Sent to printer");
+      } catch (err) {
+        console.error(
+          "Print API error:",
+          err.response?.data || err.message || err
+        );
+        const serverErr =
+          err.response?.data?.error || err.response?.status || err.message;
+        showMessage(
+          `Prepared sheet but print server returned an error: ${serverErr}`
+        );
+      }
 
-  //     return payload;
-  //   } catch (err) {
-  //     console.error("Error preparing sheet payload:", err);
-  //     showMessage("Failed to prepare sheet: " + (err.message || ""));
-  //     return null;
-  //   }
-  // }
+      return payload;
+    } catch (err) {
+      console.error("Error preparing sheet payload:", err);
+      showMessage("Failed to prepare sheet: " + (err.message || ""));
+      return null;
+    }
+  }
 
   // console.log("Print payload", handleProceedToPrintWholeSheet);
 
@@ -1014,7 +1014,7 @@ export default function Polaroidish() {
         }
       }
 
-      // const url = "http://localhost:3000/api/print";
+      const url = "https://f5550d7d7733.ngrok-free.app/receive";
       try {
         const res = await axios.post(url, formData, {
           withCredentials: true,
