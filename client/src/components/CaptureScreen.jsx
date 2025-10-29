@@ -80,12 +80,13 @@ export default function CaptureScreen({
       }}
     >
       {/* Back Button - Top Left Position */}
+      {/* Back Button - Top Right Position */}
       <button
         onClick={() => setStep("select")}
         style={{
           position: "absolute",
           top: "20px",
-          left: "20px",
+          right: "20px", // ✅ Changed from left to right
           padding: "12px 20px",
           fontSize: "15px",
           fontWeight: "600",
@@ -93,7 +94,7 @@ export default function CaptureScreen({
           background: `linear-gradient(135deg, ${COLORS.BASE_WHITE} 0%, ${COLORS.LIGHT_GREY} 100%)`,
           border: `2px solid ${COLORS.PRIMARY_BLUE}20`,
           boxShadow: `0 6px 16px rgba(0, 0, 0, 0.08),
-                      inset 0 1px 0 rgba(255, 255, 255, 0.8)`,
+                inset 0 1px 0 rgba(255, 255, 255, 0.8)`,
           cursor: "pointer",
           transition: "all 0.3s ease",
           display: "flex",
@@ -103,14 +104,14 @@ export default function CaptureScreen({
           zIndex: 100,
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateX(-3px)";
+          e.currentTarget.style.transform = "translateX(3px)"; // ✅ Changed from -3px to +3px for right-side effect
           e.currentTarget.style.boxShadow = `0 10px 24px rgba(0, 0, 0, 0.12),
-                                              inset 0 1px 0 rgba(255, 255, 255, 0.8)`;
+                                        inset 0 1px 0 rgba(255, 255, 255, 0.8)`;
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = "translateX(0)";
           e.currentTarget.style.boxShadow = `0 6px 16px rgba(0, 0, 0, 0.08),
-                                              inset 0 1px 0 rgba(255, 255, 255, 0.8)`;
+                                        inset 0 1px 0 rgba(255, 255, 255, 0.8)`;
         }}
       >
         <svg

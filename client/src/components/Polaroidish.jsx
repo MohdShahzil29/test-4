@@ -36,6 +36,7 @@ export default function Polaroidish() {
 
   const [manualCopies, setManualCopies] = useState(false);
 
+  const captureCountRef = useRef(0);
   const COLORS = {
     PRIMARY_BLUE: "#528bad",
     LIGHT_BACKGROUND: "#dee3f6",
@@ -44,6 +45,18 @@ export default function Polaroidish() {
     LIGHT_GREY: "#f2f2f2",
     TEXT_BLACK: "#000000",
     BASE_WHITE: "#FFFFFF",
+
+    // Additional pastel colors
+    PEACH_CRAYOLA: "#FFC09F",
+    LEMON_CHIFFON: "#FFEE93",
+    POWDER_BLUE: "#A0CED9",
+    MINT_GREEN: "#B8E0D2",
+    LAVENDER_MIST: "#D1CFE2",
+    BLUSH_PINK: "#EAC9C1",
+    HONEYDEW: "#D6EADF",
+    CHAMPAGNE_CREAM: "#FFF1E6",
+    SKY_BLUE: "#DDEDEA",
+    APRICOT: "#FAD4C0",
   };
 
   const PRESET_BG_COLORS = [
@@ -54,7 +67,17 @@ export default function Polaroidish() {
     { name: "Pink", value: "#ffaeb2" },
     { name: "Yellow", value: COLORS.ACCENT_YELLOW },
     { name: "Light Blue", value: COLORS.LIGHT_BACKGROUND },
-    { name: "Black", value: "#000000" },
+    { name: "Black", value: COLORS.TEXT_BLACK },
+
+    // Added pastel color presets
+    { name: "Peach Crayola", value: COLORS.PEACH_CRAYOLA },
+    { name: "Lemon Chiffon", value: COLORS.LEMON_CHIFFON },
+    { name: "Powder Blue", value: COLORS.POWDER_BLUE },
+    { name: "Mint Green", value: COLORS.MINT_GREEN },
+    { name: "Lavender Mist", value: COLORS.LAVENDER_MIST },
+    { name: "Blush Pink", value: COLORS.BLUSH_PINK },
+    { name: "Honeydew", value: COLORS.HONEYDEW },
+    { name: "Champagne Cream", value: COLORS.CHAMPAGNE_CREAM },
   ];
 
   const ASPECT_PRESETS = {
@@ -721,58 +744,111 @@ export default function Polaroidish() {
     return payload;
   }
 
+  // async function handleProceedToPrintWholeSheet() {
+  //   try {
+  //     showMessage("Preparing sheet for print...");
+  //     const payload = await buildFullSheetPayload();
+  //     if (!payload) return;
+  //     setStep("print");
+
+  //     const formData = new FormData();
+  //     formData.append("copies", String(printCopies));
+  //     formData.append("filter", filter ?? "");
+  //     formData.append("templateId", selectedTemplate?.id || "");
+  //     formData.append("backgroundColor", bgColor ?? "");
+
+  //     const sheetImage = payload.sheet.image;
+  //     let blob;
+  //     try {
+  //       if (!sheetImage) throw new Error("No sheet image found in payload");
+  //       if (sheetImage instanceof Blob) {
+  //         blob = sheetImage;
+  //       } else {
+  //         const resp = await fetch(sheetImage);
+  //         blob = await resp.blob();
+  //       }
+  //     } catch (fetchErr) {
+  //       console.warn("fetch->blob failed, trying base64 fallback:", fetchErr);
+  //       if (typeof sheetImage === "string" && sheetImage.startsWith("data:")) {
+  //         const parts = sheetImage.split(",");
+  //         const mimeMatch = parts[0].match(/:(.*?);/);
+  //         const mime = mimeMatch ? mimeMatch[1] : "image/png";
+  //         const bstr = atob(parts[1]);
+  //         let n = bstr.length;
+  //         const u8arr = new Uint8Array(n);
+  //         while (n--) u8arr[n] = bstr.charCodeAt(n);
+  //         blob = new Blob([u8arr], { type: mime });
+  //       } else {
+  //         throw fetchErr;
+  //       }
+  //     }
+
+  //     formData.append("sheetImage", blob, "sheet.png");
+
+  //     const url = "https://f5550d7d7733.ngrok-free.app/receive";
+  //     try {
+  //       const res = await axios.post(url, formData, {
+  //         withCredentials: true,
+  //       });
+
+  //       console.log("Print response:", res.data);
+  //       showMessage("Sent to printer");
+  //     } catch (err) {
+  //       console.error(
+  //         "Print API error:",
+  //         err.response?.data || err.message || err
+  //       );
+  //       const serverErr =
+  //         err.response?.data?.error || err.response?.status || err.message;
+  //       showMessage(
+  //         `Prepared sheet but print server returned an error: ${serverErr}`
+  //       );
+  //     }
+
+  //     return payload;
+  //   } catch (err) {
+  //     console.error("Error preparing sheet payload:", err);
+  //     showMessage("Failed to prepare sheet: " + (err.message || ""));
+  //     return null;
+  //   }
+  // }
+
+  // console.log("Print payload", handleProceedToPrintWholeSheet);
+
   async function handleProceedToPrintWholeSheet() {
     try {
       showMessage("Preparing sheet for print...");
       const payload = await buildFullSheetPayload();
       if (!payload) return;
+
+      // ✅ Log the complete payload
+      console.log("📦 Full Print Payload:", payload);
+      console.log(
+        "📸 Sheet Image Preview:",
+        payload.sheet.image.substring(0, 50) + "..."
+      );
+      console.log("📋 Print Copies:", payload.printCopies);
+      console.log("🎨 Filter:", payload.filter);
+      console.log("🎨 Background Color:", payload.backgroundColor);
+      console.log("📊 Columns Data:", payload.columns);
+
       setStep("print");
 
-      const formData = new FormData();
-      formData.append("copies", String(printCopies));
-      formData.append("filter", filter ?? "");
-      formData.append("templateId", selectedTemplate?.id || "");
-      formData.append("backgroundColor", bgColor ?? "");
-
-      const sheetImage = payload.sheet.image;
-      let blob;
-      try {
-        if (!sheetImage) throw new Error("No sheet image found in payload");
-        if (sheetImage instanceof Blob) {
-          blob = sheetImage;
-        } else {
-          const resp = await fetch(sheetImage);
-          blob = await resp.blob();
-        }
-      } catch (fetchErr) {
-        console.warn("fetch->blob failed, trying base64 fallback:", fetchErr);
-        if (typeof sheetImage === "string" && sheetImage.startsWith("data:")) {
-          const parts = sheetImage.split(",");
-          const mimeMatch = parts[0].match(/:(.*?);/);
-          const mime = mimeMatch ? mimeMatch[1] : "image/png";
-          const bstr = atob(parts[1]);
-          let n = bstr.length;
-          const u8arr = new Uint8Array(n);
-          while (n--) u8arr[n] = bstr.charCodeAt(n);
-          blob = new Blob([u8arr], { type: mime });
-        } else {
-          throw fetchErr;
-        }
-      }
-
-      formData.append("sheetImage", blob, "sheet.png");
-
+      // ✅ Send as JSON instead of FormData
       const url = "https://f5550d7d7733.ngrok-free.app/receive";
       try {
-        const res = await axios.post(url, formData, {
+        const res = await axios.post(url, payload, {
+          headers: {
+            "Content-Type": "application/json",
+          },
           withCredentials: true,
         });
 
-        console.log("Print response:", res.data);
+        console.log("✅ Print response:", res.data);
         showMessage("Sent to printer");
       } catch (err) {
         console.error(
-          "Print API error:",
+          "❌ Print API error:",
           err.response?.data || err.message || err
         );
         const serverErr =
@@ -784,13 +860,11 @@ export default function Polaroidish() {
 
       return payload;
     } catch (err) {
-      console.error("Error preparing sheet payload:", err);
+      console.error("❌ Error preparing sheet payload:", err);
       showMessage("Failed to prepare sheet: " + (err.message || ""));
       return null;
     }
   }
-
-  // console.log("Print payload", handleProceedToPrintWholeSheet);
 
   async function buildFullSheetPayload() {
     const usingLayout = layouts.vertical[totalFrames];
@@ -1047,13 +1121,48 @@ export default function Polaroidish() {
   function startSequence() {
     if (!webcamStarted) startWebcam();
     setAutoCapturing(true);
+    captureCountRef.current = 0;
     clearSequenceTimer();
     performSequenceStep();
   }
 
-  function performSequenceStep() {
+  // function performSequenceStep() {
+  //   clearSequenceTimer();
+  //   if (photosTaken.length >= photosToCapture) {
+  //     setAutoCapturing(false);
+  //     clearSequenceTimer();
+  //     return;
+  //   }
+
+  //   let c = 3;
+  //   setShowCaptureNumber(c);
+
+  //   const tick = () => {
+  //     c = c - 1;
+  //     if (c > 0) {
+  //       setShowCaptureNumber(c);
+  //       sequenceTimerRef.current = setTimeout(tick, 1000);
+  //     } else {
+  //       setShowCaptureNumber(null);
+  //       capturePhoto();
+  //       sequenceTimerRef.current = setTimeout(() => {
+  //         if (photosTaken.length < photosToCapture) performSequenceStep();
+  //         else {
+  //           setAutoCapturing(false);
+  //           clearSequenceTimer();
+  //         }
+  //       }, AUTO_CAPTURE_DELAY_MS);
+  //     }
+  //   };
+
+  //   sequenceTimerRef.current = setTimeout(tick, 1000);
+  // }
+
+  function performSequenceStep(currentPhotoCount = photosTaken.length) {
     clearSequenceTimer();
-    if (photosTaken.length >= photosToCapture) {
+
+    // ✅ Use passed parameter instead of state
+    if (captureCountRef.current >= photosToCapture) {
       setAutoCapturing(false);
       clearSequenceTimer();
       return;
@@ -1070,13 +1179,20 @@ export default function Polaroidish() {
       } else {
         setShowCaptureNumber(null);
         capturePhoto();
-        sequenceTimerRef.current = setTimeout(() => {
-          if (photosTaken.length < photosToCapture) performSequenceStep();
-          else {
-            setAutoCapturing(false);
-            clearSequenceTimer();
-          }
-        }, AUTO_CAPTURE_DELAY_MS);
+
+        // ✅ Next photo count ko manually calculate karo
+        const nextPhotoCount = currentPhotoCount + 1;
+
+        // ✅ Check with calculated count, not state
+        if (nextPhotoCount < photosToCapture) {
+          // ✅ Turant next countdown start - no extra delay
+          sequenceTimerRef.current = setTimeout(() => {
+            performSequenceStep(nextPhotoCount); // ✅ Pass updated count
+          }, 300); // Minimal delay for capture to complete
+        } else {
+          setAutoCapturing(false);
+          clearSequenceTimer();
+        }
       }
     };
 
