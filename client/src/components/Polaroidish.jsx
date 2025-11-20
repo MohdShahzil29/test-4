@@ -7,6 +7,8 @@ import PreviewScreen from "./PreviewScreen";
 import PrintScreen from "./PrintScreen";
 import MessageBox from "./MessageBox";
 import { uploadWithTransform } from "../../utils/cloudinaryApi";
+import EditorScreen from "./EditorScreen";
+import UploadPhotoScreen from "./UploadPhotoScreen";
 
 export default function Polaroidish() {
   // All refs, states, constants remain same as original
@@ -35,6 +37,8 @@ export default function Polaroidish() {
   const [selectedRowIndex, setSelectedRowIndex] = useState(null);
 
   const [manualCopies, setManualCopies] = useState(false);
+  const [uploadedPhotos, setUploadedPhotos] = useState([]);
+  const [photoRotations, setPhotoRotations] = useState({});
 
   const captureCountRef = useRef(0);
   const COLORS = {
@@ -283,33 +287,33 @@ export default function Polaroidish() {
   //     setSelectedAspectRatio(selectedTemplate.aspectRatio);
   //   }
   // }, [selectedTemplate]);
-  useEffect(() => {
-    if (!selectedTemplate) return;
+  // useEffect(() => {
+  //   if (!selectedTemplate) return;
 
-    setTotalFrames(selectedTemplate.frames);
+  //   setTotalFrames(selectedTemplate.frames);
 
-    const layoutGroup = layouts[selectedTemplate.layout];
-    if (layoutGroup && layoutGroup[selectedTemplate.frames]) {
-      const usingLayout = layoutGroup[selectedTemplate.frames];
+  //   const layoutGroup = layouts[selectedTemplate.layout];
+  //   if (layoutGroup && layoutGroup[selectedTemplate.frames]) {
+  //     const usingLayout = layoutGroup[selectedTemplate.frames];
 
-      setPhotosToCapture(usingLayout.numRows);
+  //     setPhotosToCapture(usingLayout.numRows);
 
-      // only auto-set copies if user hasn't chosen manual copies
-      if (!manualCopies) {
-        setPrintCopies(usingLayout.numRows);
-      }
+  //     // only auto-set copies if user hasn't chosen manual copies
+  //     if (!manualCopies) {
+  //       setPrintCopies(usingLayout.numRows);
+  //     }
 
-      if (usingLayout.photoWidth && usingLayout.photoHeight) {
-        const aspect = usingLayout.photoWidth / usingLayout.photoHeight;
-        setSelectedAspectRatio(aspect);
-        return;
-      }
-    }
+  //     if (usingLayout.photoWidth && usingLayout.photoHeight) {
+  //       const aspect = usingLayout.photoWidth / usingLayout.photoHeight;
+  //       setSelectedAspectRatio(aspect);
+  //       return;
+  //     }
+  //   }
 
-    if (selectedTemplate.aspectRatio) {
-      setSelectedAspectRatio(selectedTemplate.aspectRatio);
-    }
-  }, [selectedTemplate, manualCopies]);
+  //   if (selectedTemplate.aspectRatio) {
+  //     setSelectedAspectRatio(selectedTemplate.aspectRatio);
+  //   }
+  // }, [selectedTemplate, manualCopies]);
 
   useEffect(() => {
     function onKey(e) {
@@ -598,15 +602,27 @@ export default function Polaroidish() {
     setPhotosTaken(next);
     showMessage("Filter applied");
   }
-
+  // getPhotosForFrames function ko update karo:
   function getPhotosForFrames() {
     const usingLayout = layouts.vertical[totalFrames];
     if (!usingLayout)
       return Array.from({ length: totalFrames }).map(() => null);
+
     const numCols = usingLayout.numCols;
+
     if (!photosTaken || photosTaken.length === 0) {
       return Array.from({ length: totalFrames }).map(() => null);
     }
+
+    // ✅ NEW LOGIC: If uploaded photos >= totalFrames, show unique photos
+    if (photosTaken.length >= totalFrames) {
+      return Array.from({ length: totalFrames }).map((_, i) => {
+        const p = photosTaken[i % photosTaken.length];
+        return p ? p.filtered || p.raw : null;
+      });
+    }
+
+    // ✅ OLD LOGIC: Duplicate photos rowwise if photos < totalFrames
     return Array.from({ length: totalFrames }).map((_, i) => {
       const row = Math.floor(i / numCols);
       const idx = row % photosTaken.length;
@@ -1391,6 +1407,32 @@ export default function Polaroidish() {
         />
       )}
 
+      {step === "upload" && (
+        <UploadPhotoScreen
+          photosToCapture={photosToCapture}
+          setUploadedPhotos={setUploadedPhotos}
+          setStep={setStep}
+          btnPrimary={btnPrimary}
+          btnSecondary={btnSecondary}
+          COLORS={COLORS}
+        />
+      )}
+
+      {step === "editor" && (
+        <EditorScreen
+          uploadedPhotos={uploadedPhotos}
+          setPhotosTaken={setPhotosTaken}
+          totalFrames={totalFrames}
+          filter={filter}
+          setFilter={setFilter}
+          bgColor={bgColor}
+          setStep={setStep}
+          btnPrimary={btnPrimary}
+          btnSecondary={btnSecondary}
+          COLORS={COLORS}
+        />
+      )}
+
       {step === "preview" && (
         <PreviewScreen
           layouts={layouts}
@@ -1402,6 +1444,8 @@ export default function Polaroidish() {
           PRESET_BG_COLORS={PRESET_BG_COLORS}
           setBgColor={setBgColor}
           filter={filter}
+          photoRotations={photoRotations}
+          setPhotoRotations={setPhotoRotations}
           setFilter={setFilter}
           applyFilterToAll={applyFilterToAll}
           handleProceedToPrintWholeSheet={handleProceedToPrintWholeSheet}
